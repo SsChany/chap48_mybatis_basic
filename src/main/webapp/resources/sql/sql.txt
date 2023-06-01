@@ -1,0 +1,245 @@
+--[DDL문]
+
+-- // hr2 계정으로 접속해서 작업 // ------------------------------------------------------------
+show user;
+
+CREATE TABLE regions
+    ( region_id      NUMBER CONSTRAINT  reg_id_pk PRIMARY KEY,
+      region_name    VARCHAR2(25)
+);
+
+CREATE TABLE countries
+    ( country_id      CHAR(2) CONSTRAINT country_c_id_pk PRIMARY KEY ,
+      country_name    VARCHAR2(40),
+      region_id       NUMBER CONSTRAINT countr_reg_fk
+                     REFERENCES regions(region_id)
+    );
+
+CREATE TABLE locations
+    ( location_id    NUMBER(4) CONSTRAINT loc_id_pk PRIMARY KEY,
+      street_address VARCHAR2(40),
+      postal_code    VARCHAR2(12),
+      city           VARCHAR2(30) CONSTRAINT loc_city_nn  NOT NULL,
+      state_province VARCHAR2(25),
+      country_id     CHAR(2) CONSTRAINT loc_c_id_fk
+                  REFERENCES countries(country_id)
+    ) ;
+
+CREATE TABLE departments
+    ( department_id    NUMBER(4) CONSTRAINT dept_id_pk PRIMARY KEY,
+      department_name  VARCHAR2(30) CONSTRAINT  dept_name_nn  NOT NULL,
+      manager_id       NUMBER(6),
+      location_id      NUMBER(4) CONSTRAINT dept_loc_fk
+                      REFERENCES locations (location_id)
+    ) ;
+
+CREATE TABLE jobs
+    ( job_id         VARCHAR2(10) CONSTRAINT job_id_pk PRIMARY KEY,
+      job_title      VARCHAR2(35) CONSTRAINT     job_title_nn  NOT NULL,
+      min_salary     NUMBER(6),
+      max_salary     NUMBER(6)
+    ) ;
+
+create table job_grades
+   ( grade_level varchar2(3) CONSTRAINT job_gra_level_pk PRIMARY KEY,
+     lowest_sal number,
+     highest_sal number);
+
+-- drop table employees cascade constraint;
+CREATE TABLE employees
+    ( employee_id    NUMBER(6) CONSTRAINT emp_emp_id_pk PRIMARY KEY ,
+      first_name     VARCHAR2(20),
+      last_name      VARCHAR2(25) CONSTRAINT emp_last_name_nn  NOT NULL,
+      email          VARCHAR2(25),
+      phone_number   VARCHAR2(20),
+      hire_date      DATE    default sysdate,
+      job_id         VARCHAR2(10) CONSTRAINT  emp_job_fk  REFERENCES jobs(job_id),
+      salary         NUMBER(8)  default 0,
+      commission_pct NUMBER(2) default 0,
+      manager_id     NUMBER(6)      CONSTRAINT  emp_manager_fk REFERENCES employees(employee_id),
+      department_id  NUMBER(4) CONSTRAINT emp_dept_fk REFERENCES departments(department_id)
+    ) ;
+
+-- 생성된 모든 테이블 확인
+select * from tab;
+commit;
+
+ALTER TABLE departments
+ADD (CONSTRAINT dept_mgr_fk FOREIGN KEY(manager_id) REFERENCES employees (employee_id)
+    ) ;
+
+CREATE TABLE job_history
+    ( employee_id   NUMBER(6) CONSTRAINT    jhist_employee_nn  NOT NULL,
+      start_date    DATE    CONSTRAINT    jhist_start_date_nn  NOT NULL,
+      end_date      DATE   CONSTRAINT    jhist_end_date_nn  NOT NULL,
+      job_id        VARCHAR2(10)    CONSTRAINT    jhist_job_nn  NOT NULL,
+      department_id NUMBER(4),
+      CONSTRAINT jhist_emp_id_st_date_pk PRIMARY KEY (employee_id, start_date),
+      CONSTRAINT jhist_date_interval     CHECK (end_date > start_date),
+      CONSTRAINT jhist_job_fk FOREIGN KEY (job_id) REFERENCES jobs(job_id),
+      CONSTRAINT jhist_emp_fk FOREIGN KEY (employee_id) REFERENCES employees(employee_id),
+      CONSTRAINT jhist_dept_fk FOREIGN KEY (department_id) REFERENCES departments(department_id)
+    ) ;
+
+
+--[추가 DDL]
+
+-- 생성된 모든 테이블 확인
+select * from tab;
+
+ALTER TABLE departments
+ADD (CONSTRAINT dept_mgr_fk FOREIGN KEY(manager_id) REFERENCES employees (employee_id)
+    ) ;
+
+CREATE TABLE job_history
+    ( employee_id   NUMBER(6) CONSTRAINT    jhist_employee_nn  NOT NULL,
+      start_date    DATE    CONSTRAINT    jhist_start_date_nn  NOT NULL,
+      end_date      DATE   CONSTRAINT    jhist_end_date_nn  NOT NULL,
+      job_id        VARCHAR2(10)    CONSTRAINT    jhist_job_nn  NOT NULL,
+      department_id NUMBER(4),
+      CONSTRAINT jhist_emp_id_st_date_pk PRIMARY KEY (employee_id, start_date),
+      CONSTRAINT jhist_date_interval     CHECK (end_date > start_date),
+      CONSTRAINT jhist_job_fk FOREIGN KEY (job_id) REFERENCES jobs(job_id),
+      CONSTRAINT jhist_emp_fk FOREIGN KEY (employee_id) REFERENCES employees(employee_id),
+      CONSTRAINT jhist_dept_fk FOREIGN KEY (department_id) REFERENCES departments(department_id)
+    ) ;
+
+--시퀀스 생성
+CREATE SEQUENCE locations_seq
+ START WITH     3300
+ INCREMENT BY   100
+ MAXVALUE       9900
+ NOCACHE
+ NOCYCLE;
+
+CREATE SEQUENCE departments_seq
+ START WITH     280
+ INCREMENT BY   10
+ MAXVALUE       9990
+ NOCACHE
+ NOCYCLE;
+
+CREATE SEQUENCE employees_seq
+ START WITH     207
+ INCREMENT BY   1
+ NOCACHE
+ NOCYCLE;
+ 
+ 
+ --// 샘플 데이터 입력 //--------------------------------------------
+Insert into REGIONS (REGION_ID,REGION_NAME) values (1,'Europe');
+Insert into REGIONS (REGION_ID,REGION_NAME) values (2,'Americas');
+Insert into REGIONS (REGION_ID,REGION_NAME) values (3,'Asia');
+Insert into REGIONS (REGION_ID,REGION_NAME) values (4,'Middle East and Africa');
+
+Insert into COUNTRIES (COUNTRY_ID,COUNTRY_NAME,REGION_ID) values ('CA','Canada',2);
+Insert into COUNTRIES (COUNTRY_ID,COUNTRY_NAME,REGION_ID) values ('DE','Germany',1);
+Insert into COUNTRIES (COUNTRY_ID,COUNTRY_NAME,REGION_ID) values ('UK','United Kingdom',1);
+Insert into COUNTRIES (COUNTRY_ID,COUNTRY_NAME,REGION_ID) values ('US','United States of America',2);
+
+Insert into LOCATIONS (LOCATION_ID,STREET_ADDRESS,POSTAL_CODE,CITY,STATE_PROVINCE,COUNTRY_ID) values (1400,'2014 Jabberwocky Rd','26192','Southlake','Texas','US');
+Insert into LOCATIONS (LOCATION_ID,STREET_ADDRESS,POSTAL_CODE,CITY,STATE_PROVINCE,COUNTRY_ID) values (1500,'2011 Interiors Blvd','99236','South San Francisco','California','US');
+Insert into LOCATIONS (LOCATION_ID,STREET_ADDRESS,POSTAL_CODE,CITY,STATE_PROVINCE,COUNTRY_ID) values (1700,'2004 Charade Rd','98199','Seattle','Washington','US');
+Insert into LOCATIONS (LOCATION_ID,STREET_ADDRESS,POSTAL_CODE,CITY,STATE_PROVINCE,COUNTRY_ID) values (1800,'147 Spadina Ave','M5V 2L7','Toronto','Ontario','CA');
+Insert into LOCATIONS (LOCATION_ID,STREET_ADDRESS,POSTAL_CODE,CITY,STATE_PROVINCE,COUNTRY_ID) values (2500,'Magdalen Centre, The Oxford Science Park','OX9 9ZB','Oxford','Oxford','UK');
+
+ALTER TABLE departments  DISABLE CONSTRAINT dept_mgr_fk;
+
+Insert into DEPARTMENTS (DEPARTMENT_ID,DEPARTMENT_NAME,MANAGER_ID,LOCATION_ID) values (10,'Administration',200,1700);
+Insert into DEPARTMENTS (DEPARTMENT_ID,DEPARTMENT_NAME,MANAGER_ID,LOCATION_ID) values (20,'Marketing',201,1800);
+Insert into DEPARTMENTS (DEPARTMENT_ID,DEPARTMENT_NAME,MANAGER_ID,LOCATION_ID) values (50,'Shipping',124,1500);
+Insert into DEPARTMENTS (DEPARTMENT_ID,DEPARTMENT_NAME,MANAGER_ID,LOCATION_ID) values (60,'IT',103,1400);
+Insert into DEPARTMENTS (DEPARTMENT_ID,DEPARTMENT_NAME,MANAGER_ID,LOCATION_ID) values (80,'Sales',149,2500);
+Insert into DEPARTMENTS (DEPARTMENT_ID,DEPARTMENT_NAME,MANAGER_ID,LOCATION_ID) values (90,'Executive',100,1700);
+Insert into DEPARTMENTS (DEPARTMENT_ID,DEPARTMENT_NAME,MANAGER_ID,LOCATION_ID) values (110,'Accounting',205,1700);
+Insert into DEPARTMENTS (DEPARTMENT_ID,DEPARTMENT_NAME,MANAGER_ID,LOCATION_ID) values (190,'Contracting',null,1700);
+
+Insert into JOBS (JOB_ID,JOB_TITLE,MIN_SALARY,MAX_SALARY) values ('AD_PRES','사장',20000,40000);
+Insert into JOBS (JOB_ID,JOB_TITLE,MIN_SALARY,MAX_SALARY) values ('AD_VP','관리 부사장',15000,30000);
+Insert into JOBS (JOB_ID,JOB_TITLE,MIN_SALARY,MAX_SALARY) values ('AD_ASST','관리 보조역',3000,6000);
+Insert into JOBS (JOB_ID,JOB_TITLE,MIN_SALARY,MAX_SALARY) values ('AC_MGR','회계 관리자',8200,16000);
+Insert into JOBS (JOB_ID,JOB_TITLE,MIN_SALARY,MAX_SALARY) values ('AC_ACCOUNT','회계사',4200,9000);
+Insert into JOBS (JOB_ID,JOB_TITLE,MIN_SALARY,MAX_SALARY) values ('SA_MAN','영업관리자',10000,20000);
+Insert into JOBS (JOB_ID,JOB_TITLE,MIN_SALARY,MAX_SALARY) values ('SA_REP','영업담당자',6000,12000);
+Insert into JOBS (JOB_ID,JOB_TITLE,MIN_SALARY,MAX_SALARY) values ('ST_MAN','증권관리자',5500,8500);
+Insert into JOBS (JOB_ID,JOB_TITLE,MIN_SALARY,MAX_SALARY) values ('ST_CLERK','증권사무원',2000,5000);
+Insert into JOBS (JOB_ID,JOB_TITLE,MIN_SALARY,MAX_SALARY) values ('IT_PROG','IT프로그램 개발자',4000,10000);
+Insert into JOBS (JOB_ID,JOB_TITLE,MIN_SALARY,MAX_SALARY) values ('MK_MAN','마케팅 매니저',9000,15000);
+Insert into JOBS (JOB_ID,JOB_TITLE,MIN_SALARY,MAX_SALARY) values ('MK_REP','마케팅 담당자',4000,9000);
+
+Insert into EMPLOYEES (EMPLOYEE_ID,FIRST_NAME,LAST_NAME,EMAIL,PHONE_NUMBER,HIRE_DATE,JOB_ID,SALARY,COMMISSION_PCT,MANAGER_ID,DEPARTMENT_ID) 
+values (100,'스티븐','킹','SKING','515.123.4567',to_date('87/01/08','RR/MM/DD'),'AD_PRES',24000,null,null,90);
+Insert into EMPLOYEES (EMPLOYEE_ID,FIRST_NAME,LAST_NAME,EMAIL,PHONE_NUMBER,HIRE_DATE,JOB_ID,SALARY,COMMISSION_PCT,MANAGER_ID,DEPARTMENT_ID) 
+values (101,'니나','코커','NKOCHHAR','515.123.4568',to_date('90/02/08','RR/MM/DD'),'AD_VP',17000,null,100,90);
+Insert into EMPLOYEES (EMPLOYEE_ID,FIRST_NAME,LAST_NAME,EMAIL,PHONE_NUMBER,HIRE_DATE,JOB_ID,SALARY,COMMISSION_PCT,MANAGER_ID,DEPARTMENT_ID) 
+values (102,'렉스','데이안','LDEHAAN','515.123.4569',to_date('92/03/08','RR/MM/DD'),'AD_VP',17000,null,100,90);
+Insert into EMPLOYEES (EMPLOYEE_ID,FIRST_NAME,LAST_NAME,EMAIL,PHONE_NUMBER,HIRE_DATE,JOB_ID,SALARY,COMMISSION_PCT,MANAGER_ID,DEPARTMENT_ID) 
+values (103,'알렉산더','휴놀드','AHUNOLD','590.423.4567',to_date('93/04/08','RR/MM/DD'),'IT_PROG',9000,null,102,60);
+Insert into EMPLOYEES (EMPLOYEE_ID,FIRST_NAME,LAST_NAME,EMAIL,PHONE_NUMBER,HIRE_DATE,JOB_ID,SALARY,COMMISSION_PCT,MANAGER_ID,DEPARTMENT_ID) 
+values (104,'부르스','어니스트','BERNST','590.423.4568',to_date('95/05/10','RR/MM/DD'),'IT_PROG',6000,null,103,60);
+Insert into EMPLOYEES (EMPLOYEE_ID,FIRST_NAME,LAST_NAME,EMAIL,PHONE_NUMBER,HIRE_DATE,JOB_ID,SALARY,COMMISSION_PCT,MANAGER_ID,DEPARTMENT_ID) 
+values (107,'다이에나','로렌츠','DLORENTZ','590.423.5567',to_date('85/06/08','RR/MM/DD'),'IT_PROG',4200,null,103,60);
+Insert into EMPLOYEES (EMPLOYEE_ID,FIRST_NAME,LAST_NAME,EMAIL,PHONE_NUMBER,HIRE_DATE,JOB_ID,SALARY,COMMISSION_PCT,MANAGER_ID,DEPARTMENT_ID) 
+values (124,'케빈','무고스','KMOURGOS','650.123.5234',to_date('86/07/08','RR/MM/DD'),'ST_MAN',5800,null,100,50);
+Insert into EMPLOYEES (EMPLOYEE_ID,FIRST_NAME,LAST_NAME,EMAIL,PHONE_NUMBER,HIRE_DATE,JOB_ID,SALARY,COMMISSION_PCT,MANAGER_ID,DEPARTMENT_ID) 
+values (141,'트레나','라자스','TRAJS','650.121.8009',to_date('80/08/08','RR/MM/DD'),'ST_CLERK',3500,null,124,50);
+
+Insert into EMPLOYEES (EMPLOYEE_ID,FIRST_NAME,LAST_NAME,EMAIL,PHONE_NUMBER,HIRE_DATE,JOB_ID,SALARY,COMMISSION_PCT,MANAGER_ID,DEPARTMENT_ID) 
+values (142,'쿠르츠','데이비스','CDAVIES','650.121.2994',to_date('95/09/08','RR/MM/DD'),'ST_CLERK',3100,null,124,50);
+Insert into EMPLOYEES (EMPLOYEE_ID,FIRST_NAME,LAST_NAME,EMAIL,PHONE_NUMBER,HIRE_DATE,JOB_ID,SALARY,COMMISSION_PCT,MANAGER_ID,DEPARTMENT_ID) 
+values (143,'란달','마토스','RMATOS','650.121.2874',to_date('96/10/08','RR/MM/DD'),'ST_CLERK',2600,null,124,50);
+Insert into EMPLOYEES (EMPLOYEE_ID,FIRST_NAME,LAST_NAME,EMAIL,PHONE_NUMBER,HIRE_DATE,JOB_ID,SALARY,COMMISSION_PCT,MANAGER_ID,DEPARTMENT_ID) 
+values (144,'피터','바가스','PVARGAS','650.121.2004',to_date('20/11/08','RR/MM/DD'),'ST_CLERK',2500,null,124,50);
+Insert into EMPLOYEES (EMPLOYEE_ID,FIRST_NAME,LAST_NAME,EMAIL,PHONE_NUMBER,HIRE_DATE,JOB_ID,SALARY,COMMISSION_PCT,MANAGER_ID,DEPARTMENT_ID) 
+values (149,'엘레니','즐롯키','EZLOTKEY','011.44.1344.429018',to_date('97/04/08','RR/MM/DD'),'SA_MAN',10500,0.2,100,80);
+Insert into EMPLOYEES (EMPLOYEE_ID,FIRST_NAME,LAST_NAME,EMAIL,PHONE_NUMBER,HIRE_DATE,JOB_ID,SALARY,COMMISSION_PCT,MANAGER_ID,DEPARTMENT_ID) 
+values (174,'엘렌','아벨','EABEL','011.44.1644.429267',to_date('21/05/08','RR/MM/DD'),'SA_REP',11000,0.3,149,80);
+Insert into EMPLOYEES (EMPLOYEE_ID,FIRST_NAME,LAST_NAME,EMAIL,PHONE_NUMBER,HIRE_DATE,JOB_ID,SALARY,COMMISSION_PCT,MANAGER_ID,DEPARTMENT_ID) 
+values (176,'조나단','테일러','JTAYLOR','011.44.1644.429265',to_date('01/07/08','RR/MM/DD'),'SA_REP',8600,0.2,149,80);
+Insert into EMPLOYEES (EMPLOYEE_ID,FIRST_NAME,LAST_NAME,EMAIL,PHONE_NUMBER,HIRE_DATE,JOB_ID,SALARY,COMMISSION_PCT,MANAGER_ID,DEPARTMENT_ID) 
+values (178,'킴벌리','그랜트','KGRANT','011.44.1644.429263',to_date('97/03/08','RR/MM/DD'),'SA_REP',7000,0.15,149,null);
+Insert into EMPLOYEES (EMPLOYEE_ID,FIRST_NAME,LAST_NAME,EMAIL,PHONE_NUMBER,HIRE_DATE,JOB_ID,SALARY,COMMISSION_PCT,MANAGER_ID,DEPARTMENT_ID) 
+values (200,'제니퍼','할른','JWHALEN','515.123.4444',to_date('98/08/08','RR/MM/DD'),'AD_ASST',4400,null,101,10);
+Insert into EMPLOYEES (EMPLOYEE_ID,FIRST_NAME,LAST_NAME,EMAIL,PHONE_NUMBER,HIRE_DATE,JOB_ID,SALARY,COMMISSION_PCT,MANAGER_ID,DEPARTMENT_ID) 
+values (201,'마이클','헤르츠테인','MHARTSTE','515.123.5555',to_date('99/12/08','RR/MM/DD'),'MK_MAN',13000,null,100,20);
+Insert into EMPLOYEES (EMPLOYEE_ID,FIRST_NAME,LAST_NAME,EMAIL,PHONE_NUMBER,HIRE_DATE,JOB_ID,SALARY,COMMISSION_PCT,MANAGER_ID,DEPARTMENT_ID) 
+values (202,'팻','페이','PFAY','603.123.6666',to_date('88/11/08','RR/MM/DD'),'MK_REP',6000,null,201,20);
+Insert into EMPLOYEES (EMPLOYEE_ID,FIRST_NAME,LAST_NAME,EMAIL,PHONE_NUMBER,HIRE_DATE,JOB_ID,SALARY,COMMISSION_PCT,MANAGER_ID,DEPARTMENT_ID) 
+values (205,'셀리','히긴스','SHIGGINS','515.123.8080',to_date('91/05/08','RR/MM/DD'),'AC_MGR',12000,null,101,110);
+Insert into EMPLOYEES (EMPLOYEE_ID,FIRST_NAME,LAST_NAME,EMAIL,PHONE_NUMBER,HIRE_DATE,JOB_ID,SALARY,COMMISSION_PCT,MANAGER_ID,DEPARTMENT_ID) 
+values (206,'윌리암','게이츠','WGIETZ','515.123.8181',to_date('02/06/08','RR/MM/DD'),'AC_ACCOUNT',8300,null,205,110);
+
+insert into job_grades values('A',1000, 2999);
+insert into job_grades values('B',3000, 5999);
+insert into job_grades values('C',6000, 9999);
+insert into job_grades values('D',10000, 14999);
+insert into job_grades values('E',15000, 24999);
+insert into job_grades values('F',25000, 40000);
+
+Insert into JOB_HISTORY (EMPLOYEE_ID,START_DATE,END_DATE,JOB_ID,DEPARTMENT_ID) values (102,to_date('93/01/13','YYYY/MM/DD'),to_date('98/06/24','YYYY/MM/DD'),'IT_PROG',60);
+Insert into JOB_HISTORY (EMPLOYEE_ID,START_DATE,END_DATE,JOB_ID,DEPARTMENT_ID) values (101,to_date('90/04/13','YYYY/MM/DD'),to_date('95/06/24','YYYY/MM/DD'),'AC_ACCOUNT',110);
+Insert into JOB_HISTORY (EMPLOYEE_ID,START_DATE,END_DATE,JOB_ID,DEPARTMENT_ID) values (101,to_date('93/01/13','YYYY/MM/DD'),to_date('97/06/24','YYYY/MM/DD'),'AC_MGR',110);
+Insert into JOB_HISTORY (EMPLOYEE_ID,START_DATE,END_DATE,JOB_ID,DEPARTMENT_ID) values (201,to_date('96/01/13','YYYY/MM/DD'),to_date('99/06/24','YYYY/MM/DD'),'MK_REP',20);
+Insert into JOB_HISTORY (EMPLOYEE_ID,START_DATE,END_DATE,JOB_ID,DEPARTMENT_ID) values (200,to_date('87/01/13','YYYY/MM/DD'),to_date('93/06/24','YYYY/MM/DD'),'AD_ASST',90);
+Insert into JOB_HISTORY (EMPLOYEE_ID,START_DATE,END_DATE,JOB_ID,DEPARTMENT_ID) values (176,to_date('98/01/13','YYYY/MM/DD'),to_date('98/12/24','YYYY/MM/DD'),'SA_REP',80);
+Insert into JOB_HISTORY (EMPLOYEE_ID,START_DATE,END_DATE,JOB_ID,DEPARTMENT_ID) values (176,to_date('99/01/13','YYYY/MM/DD'),to_date('99/06/24','YYYY/MM/DD'),'SA_MAN',80);
+Insert into JOB_HISTORY (EMPLOYEE_ID,START_DATE,END_DATE,JOB_ID,DEPARTMENT_ID) values (200,to_date('94/01/13','YYYY/MM/DD'),to_date('98/06/24','YYYY/MM/DD'),'AC_ACCOUNT',90);
+
+ALTER TABLE departments ENABLE CONSTRAINT dept_mgr_fk;
+
+CREATE INDEX emp_department_ix ON employees (department_id);
+CREATE INDEX emp_job_ix ON employees (job_id);
+CREATE INDEX emp_manager_ix ON employees (manager_id);
+CREATE INDEX emp_name_ix ON employees (last_name, first_name);
+CREATE INDEX dept_location_ix ON departments (location_id);
+CREATE INDEX jhist_job_ix ON job_history (job_id);
+CREATE INDEX jhist_employee_ix ON job_history (employee_id);
+CREATE INDEX jhist_department_ix ON job_history (department_id);
+CREATE INDEX loc_city_ix ON locations (city);
+CREATE INDEX loc_state_province_ix ON locations (state_province);
+CREATE INDEX loc_country_ix ON locations (country_id);
+COMMIT;
+
+
+
+
